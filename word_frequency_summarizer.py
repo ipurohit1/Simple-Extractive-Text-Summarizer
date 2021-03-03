@@ -1,3 +1,10 @@
+'''Extractive text summarizer that create a summary of a given text 
+by compiling the sentences with highest sentence scores. Sentence score 
+here is defined by the sum of the relative frequency of each of the words 
+in the sentence. The relative frequency is the frequency of a given word 
+divided by the frequency of the most common word in the text. 
+ '''
+
 import spacy 
 from spacy.lang.en.stop_words import STOP_WORDS
 from string import punctuation 
@@ -5,9 +12,12 @@ from string import punctuation
 
 
 def count_word_frequency(document, punctuation, stop_words): 
+    '''Given a document of text (segmented into tokens), returns a dict
+    mapping each word in the doc to its relative frequency'''
 
     word_occurrences = {}
 
+    # count occurrences of words in document, excluding punctuation/stop words
     for word in document: 
         current = word.text.lower()
         if current not in stop_words and current not in punctuation: 
@@ -26,9 +36,15 @@ def count_word_frequency(document, punctuation, stop_words):
     return word_occurrences
 
 def compute_sentence_score(document, word_occurrences):
+    '''Given a document of text (segmented into tokens), returns 
+    a dict mapping each sentence to its score. The score is determined by 
+    summing the word frequency of each word in the sentence.'''
+
     sentences = [sent for sent in document.sents]
 
     sentence_scores = {}
+
+    # Iterate through each sentence, word by word, and sum the sentence score
     for sentence in sentences:
         for word in sentence: 
             current = word.text.lower()
@@ -41,12 +57,18 @@ def compute_sentence_score(document, word_occurrences):
 
 
 def summarize(sentence_scores, length):
+    '''Given the sentence scores and a specified summary length, 
+    returns a summary str, selecting the sentences with the greatest score '''
+
     summary = []
 
     i = 0
+
+    # Finds the sentence with max score, appends it to the summary,
+    # removes the sentence from the dict and then repeats the process 
     while i < length: 
         current_max = max(sentence_scores, key=sentence_scores.get)
-        del sentence_scores[current_max]
+        del sentence_scores[current_max] # remove current max sentence from sentence_scores dict 
         summary.append(current_max.text)
         i += 1
 
@@ -54,6 +76,9 @@ def summarize(sentence_scores, length):
     return summary
 
 if __name__ == '__main__': 
+    '''Main method initializes samples texts and then compiles a 7-sentence (this length can be changed) 
+    summary of the text to print to stdout, along with a comparison of the number of chars in the original text
+    compared to the summary. '''
 
     text = """
     There are broadly two types of extractive summarization tasks depending on what the summarization program focuses on. The first is generic summarization, which focuses on obtaining a generic summary or abstract of the collection (whether documents, or sets of images, or videos, news stories etc.). The second is query relevant summarization, sometimes called query-based summarization, which summarizes objects specific to a query. Summarization systems are able to create both query relevant text summaries and generic machine-generated summaries depending on what the user needs.
@@ -82,6 +107,7 @@ if __name__ == '__main__':
     word_occurences = count_word_frequency(document, punctuation, stop_words)
 
     sentence_scores = compute_sentence_score(document, word_occurences)
+    print(sentence_scores)
     summary = summarize(sentence_scores, length)
 
     print(summary + '\n')
